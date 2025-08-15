@@ -85,8 +85,8 @@ gltf.save_binary("sphere.glb")
 
 # ======== CZML作成 ========
 longitude = 139.7535093754493
-latitude = 35.65361100740639
-height = 100
+latitude = 35.65381100740639
+height = 115
 
 czml = [
     {"id": "document", "version": "1.0"},
