@@ -10,11 +10,11 @@
       "cartographicDegrees": [
         139.7535093754493,
         35.65361100740639,
-        10
+        100
       ]
     },
     "model": {
-      "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",
+      "gltf": "https://msaahwoa.github.io/my_3Dmodel/sphere.glb",
       "scale": 1.0,
       "minimumPixelSize": 1
     }

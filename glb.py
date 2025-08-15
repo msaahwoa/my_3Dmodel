@@ -86,7 +86,7 @@ gltf.save_binary("sphere.glb")
 # ======== CZML作成 ========
 longitude = 139.7535093754493
 latitude = 35.65361100740639
-height = 10
+height = 100
 
 czml = [
     {"id": "document", "version": "1.0"},
@@ -95,7 +95,7 @@ czml = [
         "name": "Red Cube",
         "position": {"cartographicDegrees": [longitude, latitude, height]},
         "model": {
-            "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",
+            "gltf": "https://msaahwoa.github.io/my_3Dmodel/sphere.glb",
             "scale": 1.0,
             "minimumPixelSize": 1
         }
