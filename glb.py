@@ -2,66 +2,46 @@ from pygltflib import GLTF2, Scene, Node, Mesh, Buffer, BufferView, Accessor, As
 import numpy as np
 import json
 
-# ======== 3m立方体 (面ごとに独立した頂点) ========
-# 1面4頂点 × 6面 = 24頂点
-positions = np.array([
-    # bottom (z = -4.5)
-    [-1.5, -1.5, -4.5],
-    [ 1.5, -1.5, -4.5],
-    [ 1.5,  1.5, -4.5],
-    [-1.5,  1.5, -4.5],
+import numpy as np
+from pygltflib import GLTF2, Asset, Buffer, BufferView, Accessor, Scene, Node, Mesh, Primitive, Material
 
-    # top (z = +4.5)
-    [-1.5, -1.5,  4.5],
-    [ 1.5, -1.5,  4.5],
-    [ 1.5,  1.5,  4.5],
-    [-1.5,  1.5,  4.5],
+# ======== 球メッシュ生成 ========
+radius = 1.5  # 半径(m)
+segments_lat = 32  # 緯度分割数
+segments_lon = 64  # 経度分割数
 
-    # front (y = -1.5)
-    [-1.5, -1.5, -4.5],
-    [ 1.5, -1.5, -4.5],
-    [ 1.5, -1.5,  4.5],
-    [-1.5, -1.5,  4.5],
+positions = []
+normals = []
+indices = []
 
-    # back (y = +1.5)
-    [-1.5,  1.5, -4.5],
-    [ 1.5,  1.5, -4.5],
-    [ 1.5,  1.5,  4.5],
-    [-1.5,  1.5,  4.5],
+for i in range(segments_lat + 1):
+    theta = np.pi * i / segments_lat  # 0〜π
+    sin_theta = np.sin(theta)
+    cos_theta = np.cos(theta)
 
-    # left (x = -1.5)
-    [-1.5, -1.5, -4.5],
-    [-1.5,  1.5, -4.5],
-    [-1.5,  1.5,  4.5],
-    [-1.5, -1.5,  4.5],
+    for j in range(segments_lon + 1):
+        phi = 2 * np.pi * j / segments_lon  # 0〜2π
+        sin_phi = np.sin(phi)
+        cos_phi = np.cos(phi)
 
-    # right (x = +1.5)
-    [ 1.5, -1.5, -4.5],
-    [ 1.5,  1.5, -4.5],
-    [ 1.5,  1.5,  4.5],
-    [ 1.5, -1.5,  4.5],
-], dtype=np.float32)
+        x = cos_phi * sin_theta
+        y = cos_theta
+        z = sin_phi * sin_theta
 
-# ======== 法線ベクトル（各面の方向） ========
-normals = np.array(
-    [[0, 0, -1]] * 4 +   # bottom
-    [[0, 0,  1]] * 4 +   # top
-    [[0, -1, 0]] * 4 +   # front
-    [[0,  1, 0]] * 4 +   # back
-    [[-1, 0, 0]] * 4 +   # left
-    [[ 1, 0, 0]] * 4,    # right
-    dtype=np.float32
-)
+        positions.append([radius * x, radius * y, radius * z])
+        normals.append([x, y, z])
 
-# ======== インデックス（各面を2枚の三角形に分割） ========
-indices = np.array([
-    0, 1, 2, 2, 3, 0,        # bottom
-    4, 5, 6, 6, 7, 4,        # top
-    8, 9, 10, 10, 11, 8,     # front
-    12, 13, 14, 14, 15, 12,  # back
-    16, 17, 18, 18, 19, 16,  # left
-    20, 21, 22, 22, 23, 20   # right
-], dtype=np.uint16)
+for i in range(segments_lat):
+    for j in range(segments_lon):
+        first = i * (segments_lon + 1) + j
+        second = first + segments_lon + 1
+
+        indices.extend([first, second, first + 1])
+        indices.extend([second, second + 1, first + 1])
+
+positions = np.array(positions, dtype=np.float32)
+normals = np.array(normals, dtype=np.float32)
+indices = np.array(indices, dtype=np.uint16)
 
 # ======== バッファ作成 ========
 position_bytes = positions.tobytes()
@@ -69,7 +49,7 @@ normal_bytes = normals.tobytes()
 index_bytes = indices.tobytes()
 buffer_data = position_bytes + normal_bytes + index_bytes
 
-# ======== GLTF2 オブジェクト ========
+# ======== GLTF2 作成 ========
 gltf = GLTF2(
     asset=Asset(version="2.0"),
     buffers=[Buffer(byteLength=len(buffer_data))],
@@ -81,17 +61,19 @@ gltf = GLTF2(
         material=0
     )])],
     materials=[Material(
-        pbrMetallicRoughness={"baseColorFactor": [1.0, 0.0, 0.0, 1.0]},
+        pbrMetallicRoughness={"baseColorFactor": [0.0, 0.0, 1.0, 1.0]},
         extensions={"KHR_materials_unlit": {}}
     )],
     bufferViews=[
-        BufferView(buffer=0, byteOffset=0, byteLength=len(position_bytes), target=34962),  # positions
-        BufferView(buffer=0, byteOffset=len(position_bytes), byteLength=len(normal_bytes), target=34962),  # normals
-        BufferView(buffer=0, byteOffset=len(position_bytes) + len(normal_bytes), byteLength=len(index_bytes), target=34963)  # indices
+        BufferView(buffer=0, byteOffset=0, byteLength=len(position_bytes), target=34962),
+        BufferView(buffer=0, byteOffset=len(position_bytes), byteLength=len(normal_bytes), target=34962),
+        BufferView(buffer=0, byteOffset=len(position_bytes) + len(normal_bytes), byteLength=len(index_bytes), target=34963)
     ],
     accessors=[
         Accessor(bufferView=0, componentType=5126, count=len(positions),
-                 type="VEC3", min=[-1.5, -1.5, -1.5], max=[1.5, 1.5, 1.5]),
+                 type="VEC3",
+                 min=positions.min(axis=0).tolist(),
+                 max=positions.max(axis=0).tolist()),
         Accessor(bufferView=1, componentType=5126, count=len(normals), type="VEC3"),
         Accessor(bufferView=2, componentType=5123, count=len(indices), type="SCALAR")
     ],
