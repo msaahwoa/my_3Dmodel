@@ -4,29 +4,7 @@ from pygltflib import GLTF2, Asset, Buffer, BufferView, Accessor, Scene, Node, M
 import math
 import json
 
-# ==== CZML位置 ====
-lon = 139.7535093754493
-lat = 35.65361100740639
-height = 100  # m
-
-# WGS84地球半径など
-a = 6378137.0  # 赤道半径
-e2 = 6.69437999014e-3  # 扁平率^2
-
-# 経緯度をラジアンに
-lon_rad = math.radians(lon)
-lat_rad = math.radians(lat)
-
-# 緯度における曲率半径
-N = a / math.sqrt(1 - e2 * math.sin(lat_rad)**2)
-
-# ECEF座標
-cx = (N + height) * math.cos(lat_rad) * math.cos(lon_rad)
-cy = (N + height) * math.cos(lat_rad) * math.sin(lon_rad)
-cz = (N * (1 - e2) + height) * math.sin(lat_rad)
-
-# ==== 球パラメータ ====
-radius = 1.5  # m
+radius = 1.5
 segments_lat = 32
 segments_lon = 64
 
@@ -34,6 +12,7 @@ positions = []
 normals = []
 indices = []
 
+# 頂点生成
 for i in range(segments_lat + 1):
     theta = np.pi * i / segments_lat
     sin_theta = np.sin(theta)
@@ -48,14 +27,14 @@ for i in range(segments_lat + 1):
         y = cos_theta
         z = sin_phi * sin_theta
 
-        positions.append([cx + radius * x, cy + radius * y, cz + radius * z])
+        positions.append([radius * x, radius * y, radius * z])
         normals.append([x, y, z])
 
+# インデックス生成
 for i in range(segments_lat):
     for j in range(segments_lon):
         first = i * (segments_lon + 1) + j
         second = first + segments_lon + 1
-
         indices.extend([first, second, first + 1])
         indices.extend([second, second + 1, first + 1])
 
@@ -63,13 +42,13 @@ positions = np.array(positions, dtype=np.float32)
 normals = np.array(normals, dtype=np.float32)
 indices = np.array(indices, dtype=np.uint16)
 
-# ==== バッファ作成 ====
+# バッファ作成
 position_bytes = positions.tobytes()
 normal_bytes = normals.tobytes()
 index_bytes = indices.tobytes()
 buffer_data = position_bytes + normal_bytes + index_bytes
 
-# ==== GLTF作成 ====
+# glTF作成
 gltf = GLTF2(
     asset=Asset(version="2.0"),
     buffers=[Buffer(byteLength=len(buffer_data))],
@@ -103,6 +82,7 @@ gltf = GLTF2(
 gltf.set_binary_blob(buffer_data)
 gltf.save_binary("cube.glb")
 
+
 # ======== CZML作成 ========
 longitude = 139.7535093754493
 latitude = 35.65361100740639
@@ -115,7 +95,7 @@ czml = [
         "name": "Red Cube",
         "position": {"cartographicDegrees": [longitude, latitude, height]},
         "model": {
-            "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",  # URLに変えてもOK
+            "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",
             "scale": 1.0,
             "minimumPixelSize": 1
         }
