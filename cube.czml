@@ -8,9 +8,9 @@
     "name": "Red Cube",
     "position": {
       "cartographicDegrees": [
-        139.7535093754493,
+        139.7535093754473,
         35.65361100740639,
-        100
+        10
       ]
     },
     "model": {
