@@ -1,0 +1,22 @@
+[
+  {
+    "id": "document",
+    "version": "1.0"
+  },
+  {
+    "id": "cube1",
+    "name": "Red Cube",
+    "position": {
+      "cartographicDegrees": [
+        139.7535093754493,
+        35.65361100740639,
+        10
+      ]
+    },
+    "model": {
+      "gltf": "cube.glb",
+      "scale": 1.0,
+      "minimumPixelSize": 1
+    }
+  }
+]
