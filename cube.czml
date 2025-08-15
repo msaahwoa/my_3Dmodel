@@ -14,7 +14,7 @@
       ]
     },
     "model": {
-      "gltf": "cube.glb",
+      "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",
       "scale": 1.0,
       "minimumPixelSize": 1
     }

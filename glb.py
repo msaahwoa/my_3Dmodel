@@ -124,7 +124,7 @@ czml = [
             "cartographicDegrees": [longitude, latitude, height]
         },
         "model": {
-            "gltf": "cube.glb",  # URLに変えてもOK
+            "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",  # URLに変えてもOK
             "scale": 1.0,
             "minimumPixelSize": 1
         }
