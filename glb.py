@@ -1,26 +1,46 @@
-from pygltflib import GLTF2, Scene, Node, Mesh, Buffer, BufferView, Accessor, Asset, Material, Primitive
-import numpy as np
-import json
-
+# ======== 球メッシュ生成 ========
 import numpy as np
 from pygltflib import GLTF2, Asset, Buffer, BufferView, Accessor, Scene, Node, Mesh, Primitive, Material
+import math
+import json
 
-# ======== 球メッシュ生成 ========
-radius = 1.5  # 半径(m)
-segments_lat = 32  # 緯度分割数
-segments_lon = 64  # 経度分割数
+# ==== CZML位置 ====
+lon = 139.7535093754493
+lat = 35.65361100740639
+height = 100  # m
+
+# WGS84地球半径など
+a = 6378137.0  # 赤道半径
+e2 = 6.69437999014e-3  # 扁平率^2
+
+# 経緯度をラジアンに
+lon_rad = math.radians(lon)
+lat_rad = math.radians(lat)
+
+# 緯度における曲率半径
+N = a / math.sqrt(1 - e2 * math.sin(lat_rad)**2)
+
+# ECEF座標
+cx = (N + height) * math.cos(lat_rad) * math.cos(lon_rad)
+cy = (N + height) * math.cos(lat_rad) * math.sin(lon_rad)
+cz = (N * (1 - e2) + height) * math.sin(lat_rad)
+
+# ==== 球パラメータ ====
+radius = 1.5  # m
+segments_lat = 32
+segments_lon = 64
 
 positions = []
 normals = []
 indices = []
 
 for i in range(segments_lat + 1):
-    theta = np.pi * i / segments_lat  # 0〜π
+    theta = np.pi * i / segments_lat
     sin_theta = np.sin(theta)
     cos_theta = np.cos(theta)
 
     for j in range(segments_lon + 1):
-        phi = 2 * np.pi * j / segments_lon  # 0〜2π
+        phi = 2 * np.pi * j / segments_lon
         sin_phi = np.sin(phi)
         cos_phi = np.cos(phi)
 
@@ -28,7 +48,7 @@ for i in range(segments_lat + 1):
         y = cos_theta
         z = sin_phi * sin_theta
 
-        positions.append([radius * x, radius * y, radius * z])
+        positions.append([cx + radius * x, cy + radius * y, cz + radius * z])
         normals.append([x, y, z])
 
 for i in range(segments_lat):
@@ -43,13 +63,13 @@ positions = np.array(positions, dtype=np.float32)
 normals = np.array(normals, dtype=np.float32)
 indices = np.array(indices, dtype=np.uint16)
 
-# ======== バッファ作成 ========
+# ==== バッファ作成 ====
 position_bytes = positions.tobytes()
 normal_bytes = normals.tobytes()
 index_bytes = indices.tobytes()
 buffer_data = position_bytes + normal_bytes + index_bytes
 
-# ======== GLTF2 作成 ========
+# ==== GLTF作成 ====
 gltf = GLTF2(
     asset=Asset(version="2.0"),
     buffers=[Buffer(byteLength=len(buffer_data))],
@@ -61,7 +81,7 @@ gltf = GLTF2(
         material=0
     )])],
     materials=[Material(
-        pbrMetallicRoughness={"baseColorFactor": [0.0, 0.0, 1.0, 1.0]},
+        pbrMetallicRoughness={"baseColorFactor": [1.0, 0.0, 0.0, 1.0]},
         extensions={"KHR_materials_unlit": {}}
     )],
     bufferViews=[
