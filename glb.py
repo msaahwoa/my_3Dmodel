@@ -2,41 +2,79 @@ from pygltflib import GLTF2, Scene, Node, Mesh, Buffer, BufferView, Accessor, As
 import numpy as np
 import json
 
-# ======== 3m立方体の頂点座標 ========
+# ======== 3m立方体 (面ごとに独立した頂点) ========
+# 1面4頂点 × 6面 = 24頂点
 positions = np.array([
+    # bottom (z = -1.5)
     [-1.5, -1.5, -1.5],
     [ 1.5, -1.5, -1.5],
     [ 1.5,  1.5, -1.5],
     [-1.5,  1.5, -1.5],
+
+    # top (z = +1.5)
     [-1.5, -1.5,  1.5],
     [ 1.5, -1.5,  1.5],
     [ 1.5,  1.5,  1.5],
     [-1.5,  1.5,  1.5],
+
+    # front (y = -1.5)
+    [-1.5, -1.5, -1.5],
+    [ 1.5, -1.5, -1.5],
+    [ 1.5, -1.5,  1.5],
+    [-1.5, -1.5,  1.5],
+
+    # back (y = +1.5)
+    [-1.5,  1.5, -1.5],
+    [ 1.5,  1.5, -1.5],
+    [ 1.5,  1.5,  1.5],
+    [-1.5,  1.5,  1.5],
+
+    # left (x = -1.5)
+    [-1.5, -1.5, -1.5],
+    [-1.5,  1.5, -1.5],
+    [-1.5,  1.5,  1.5],
+    [-1.5, -1.5,  1.5],
+
+    # right (x = +1.5)
+    [ 1.5, -1.5, -1.5],
+    [ 1.5,  1.5, -1.5],
+    [ 1.5,  1.5,  1.5],
+    [ 1.5, -1.5,  1.5],
 ], dtype=np.float32)
 
+# ======== 法線ベクトル（各面の方向） ========
+normals = np.array([
+    # bottom
+    [0, 0, -1]] * 4 +
+    # top
+    [[0, 0, 1]] * 4 +
+    # front
+    [[0, -1, 0]] * 4 +
+    # back
+    [[0, 1, 0]] * 4 +
+    # left
+    [[-1, 0, 0]] * 4 +
+    # right
+    [[1, 0, 0]] * 4
+, dtype=np.float32)
+
+# ======== インデックス（各面を2枚の三角形に分割） ========
 indices = np.array([
-    0,1,2, 2,3,0,  # bottom
-    4,5,6, 6,7,4,  # top
-    0,1,5, 5,4,0,  # front
-    2,3,7, 7,6,2,  # back
-    0,3,7, 7,4,0,  # left
-    1,2,6, 6,5,1   # right
+    0, 1, 2, 2, 3, 0,        # bottom
+    4, 5, 6, 6, 7, 4,        # top
+    8, 9, 10, 10, 11, 8,     # front
+    12, 13, 14, 14, 15, 12,  # back
+    16, 17, 18, 18, 19, 16,  # left
+    20, 21, 22, 22, 23, 20   # right
 ], dtype=np.uint16)
 
-# ======== 法線ベクトル ========
-# 立方体の各面ごとに法線を定義
-normals = np.array([
-    [ 0,  0, -1], [ 0,  0, -1], [ 0,  0, -1], [ 0,  0, -1],  # bottom
-    [ 0,  0,  1], [ 0,  0,  1], [ 0,  0,  1], [ 0,  0,  1],  # top
-], dtype=np.float32)
-
-# ======== バイナリバッファ作成 ========
+# ======== バッファ作成 ========
 position_bytes = positions.tobytes()
 normal_bytes = normals.tobytes()
 index_bytes = indices.tobytes()
 buffer_data = position_bytes + normal_bytes + index_bytes
 
-# ======== GLTF2 オブジェクト作成 ========
+# ======== GLTF2 オブジェクト ========
 gltf = GLTF2(
     asset=Asset(version="2.0"),
     buffers=[Buffer(byteLength=len(buffer_data))],
@@ -52,9 +90,9 @@ gltf = GLTF2(
         extensions={"KHR_materials_unlit": {}}
     )],
     bufferViews=[
-        BufferView(buffer=0, byteOffset=0, byteLength=len(position_bytes)),  # positions
-        BufferView(buffer=0, byteOffset=len(position_bytes), byteLength=len(normal_bytes)),  # normals
-        BufferView(buffer=0, byteOffset=len(position_bytes) + len(normal_bytes), byteLength=len(index_bytes))  # indices
+        BufferView(buffer=0, byteOffset=0, byteLength=len(position_bytes), target=34962),  # positions
+        BufferView(buffer=0, byteOffset=len(position_bytes), byteLength=len(normal_bytes), target=34962),  # normals
+        BufferView(buffer=0, byteOffset=len(position_bytes) + len(normal_bytes), byteLength=len(index_bytes), target=34963)  # indices
     ],
     accessors=[
         Accessor(bufferView=0, componentType=5126, count=len(positions),
@@ -66,13 +104,10 @@ gltf = GLTF2(
     extensionsUsed=["KHR_materials_unlit"]
 )
 
-# バイナリデータを埋め込み
 gltf.set_binary_blob(buffer_data)
-
-# GLB 保存
 gltf.save_binary("cube.glb")
 
-# ======== CZML 作成 ========
+# ======== CZML作成 ========
 longitude = 139.7535093754493
 latitude = 35.65361100740639
 height = 10
@@ -89,7 +124,7 @@ czml = [
             "cartographicDegrees": [longitude, latitude, height]
         },
         "model": {
-            "gltf": "cube.glb",  # 同じフォルダに配置
+            "gltf": "cube.glb",  # URLに変えてもOK
             "scale": 1.0,
             "minimumPixelSize": 1
         }
