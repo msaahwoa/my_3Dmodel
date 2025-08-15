@@ -43,20 +43,15 @@ positions = np.array([
 ], dtype=np.float32)
 
 # ======== 法線ベクトル（各面の方向） ========
-normals = np.array([
-    # bottom
-    [0, 0, -1]] * 4 +
-    # top
-    [[0, 0, 1]] * 4 +
-    # front
-    [[0, -1, 0]] * 4 +
-    # back
-    [[0, 1, 0]] * 4 +
-    # left
-    [[-1, 0, 0]] * 4 +
-    # right
-    [[1, 0, 0]] * 4
-, dtype=np.float32)
+normals = np.array(
+    [[0, 0, -1]] * 4 +   # bottom
+    [[0, 0,  1]] * 4 +   # top
+    [[0, -1, 0]] * 4 +   # front
+    [[0,  1, 0]] * 4 +   # back
+    [[-1, 0, 0]] * 4 +   # left
+    [[ 1, 0, 0]] * 4,    # right
+    dtype=np.float32
+)
 
 # ======== インデックス（各面を2枚の三角形に分割） ========
 indices = np.array([
@@ -97,8 +92,7 @@ gltf = GLTF2(
     accessors=[
         Accessor(bufferView=0, componentType=5126, count=len(positions),
                  type="VEC3", min=[-1.5, -1.5, -1.5], max=[1.5, 1.5, 1.5]),
-        Accessor(bufferView=1, componentType=5126, count=len(normals),
-                 type="VEC3"),
+        Accessor(bufferView=1, componentType=5126, count=len(normals), type="VEC3"),
         Accessor(bufferView=2, componentType=5123, count=len(indices), type="SCALAR")
     ],
     extensionsUsed=["KHR_materials_unlit"]
@@ -113,16 +107,11 @@ latitude = 35.65361100740639
 height = 10
 
 czml = [
-    {
-        "id": "document",
-        "version": "1.0"
-    },
+    {"id": "document", "version": "1.0"},
     {
         "id": "cube1",
         "name": "Red Cube",
-        "position": {
-            "cartographicDegrees": [longitude, latitude, height]
-        },
+        "position": {"cartographicDegrees": [longitude, latitude, height]},
         "model": {
             "gltf": "https://msaahwoa.github.io/my_3Dmodel/cube.glb",  # URLに変えてもOK
             "scale": 1.0,
