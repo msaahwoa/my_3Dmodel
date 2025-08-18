@@ -105,4 +105,4 @@ czml = [
 with open("cube.czml", "w", encoding="utf-8") as f:
     json.dump(czml, f, ensure_ascii=False, indent=2)
 
-print("cube.glb と cube.czml を同じフォルダに置いて PLATEAU に読み込んでください。")
+print("cube.czml を PLATEAU に読み込んでください。")
